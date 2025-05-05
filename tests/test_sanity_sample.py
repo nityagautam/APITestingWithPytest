@@ -36,3 +36,11 @@ class TestSampleAPITest:
         response = api_client.get("/valid_user")
         assert response.status_code == 200, "Expected 200 for valid user"
         assert response.json() == {"user": "valid_user"}, "Expected user data for valid user" 
+
+    @pytest.mark.parametrize("user_id", [1, 2, 3])
+    def test_get_user(self, api_client, user_id):
+        response = api_client.get(f"/users/{user_id}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == user_id
+        assert "email" in data
