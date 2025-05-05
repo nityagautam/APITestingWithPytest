@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, Mock
+from jsonschema import validate
 import pytest
 
 
@@ -44,3 +45,28 @@ class TestSampleAPITest:
         data = response.json()
         assert data["id"] == user_id
         assert "email" in data
+
+    # Schema Validation Testing for multiple users
+    @pytest.mark.parametrize("user_id", [1, 2, 3])
+    def test_user_schema_validation(self, api_client, user_id):
+        response = api_client.get(f"/users/{user_id}")
+        assert response.status_code == 200
+        data = response.json()
+
+        # expected schema
+        user_schema = {
+            "type": "object",
+            "required": ["id", "name", "email"],
+            "properties": {
+                "id": {"type": "integer"},
+                "name": {"type": "string"},
+                "email": {"type": "string", "format": "email"},
+            }
+        }
+
+        # Validate response against schema
+        # validate(instance=data, schema=user_schema)
+        try:
+            validate(instance=data, schema=user_schema)
+        except ValidationError as e:
+            pytest.fail(f"Schema validation failed: {e.message}")
