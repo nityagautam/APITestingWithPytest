@@ -27,13 +27,21 @@ def api_client(sample_url):
 
 
 # ---------------------
-# Add reporting in ini file
+# Add reporting
 # ---------------------
 def pytest_configure(config):
     # Register a custom marker for sanity tests
     config.addinivalue_line(
         "addopts", "-v --html=report.html --self-contained-html --title='PYTEST AUTOMATION REPORT'"
     )
+
+
+def pytest_html_report_title(report):
+    report.title = "API Automation Test Report"
+
+
+def pytest_html_results_summary(prefix, summary, postfix):
+    prefix.extend([f"<p>Project: Sample API Tests</p><br/><p>{summary}</p><br/><p>{postfix}</p><quote>THAT's IT</quote>"])
 
 # ---------------------
 # pytest CLI options
