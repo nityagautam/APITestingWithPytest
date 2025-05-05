@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock, Mock
 from jsonschema import validate
+import requests
+import responses
 import pytest
 
 
@@ -7,6 +9,19 @@ class TestSampleAPITest:
     """
     Sample test class
     """
+
+    # User data
+    # ----------------------
+    # expected schema
+    user_schema = {
+        "type": "object",
+        "required": ["id", "name", "email"],
+        "properties": {
+            "id": {"type": "integer"},
+            "name": {"type": "string"},
+            "email": {"type": "string", "format": "email"},
+        }
+    }
 
     def test_sample(self):
         """
@@ -53,20 +68,28 @@ class TestSampleAPITest:
         assert response.status_code == 200
         data = response.json()
 
-        # expected schema
-        user_schema = {
-            "type": "object",
-            "required": ["id", "name", "email"],
-            "properties": {
-                "id": {"type": "integer"},
-                "name": {"type": "string"},
-                "email": {"type": "string", "format": "email"},
-            }
-        }
-
+        
         # Validate response against schema
         # validate(instance=data, schema=user_schema)
         try:
-            validate(instance=data, schema=user_schema)
+            validate(instance=data, schema=self.user_schema)
         except ValidationError as e:
             pytest.fail(f"Schema validation failed: {e.message}")
+
+
+
+    # --------------------------
+    # Mock Testing
+    # --------------------------
+    @responses.activate
+    def test_mock_api_response_with_schema(self, api_client):
+        url = "https://fakeapi.com/users/1"
+        mock_data = {
+            "id": 1,
+            "name": "Alice",
+            "email": "alice@example.com"
+        }
+
+        responses.add(responses.GET, url, json=mock_data, status=200)
+        response = requests.get("https://fakeapi.com/users/1")
+        validate(instance=response.json(), schema=self.user_schema)
